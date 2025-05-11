@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<title>首次课学情诊断报告</title>
+<style>
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+
+        @font-face {
+            font-family: 'MyCustomFont';
+            src: url('./report_font.TTF') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            margin: 0 auto;
+            width: 210mm;
+            min-height: 290mm;
+            font-family: 'MyCustomFont', sans-serif;
+            color: #333;
+            background: white;
+            padding: 5mm 15mm;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background: white;
+        }
+
+        .container p {
+            font-size: 10pt;
+            color: #ccc;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 20pt;
+            margin: 0 0 3mm;
+            padding: 3mm 0;
+            border-bottom: 1.2pt solid #005a54;
+            position: relative;
+        }
+
+        h2 {
+            font-size: 16pt;
+            margin: 4mm 0;
+
+            text-align: center;
+        }
+
+        .base-block,
+        .exam-block,
+        .guess-block,
+        .study-block {
+            padding: 4mm;
+            margin-bottom: 4mm;
+            background: #f8fff8;
+            border: 1px solid #e0e0e0;
+            border-radius: 10pt;
+        }
+
+        .input-group {
+            margin-bottom: 2mm;
+            display: flex;
+            align-items: center;
+        }
+
+        .base-block {
+            display: grid;
+            grid-template-columns: 200pt 360pt;
+            grid-template-rows: 28pt 28pt 28pt;
+            grid-auto-flow: column;
+        }
+
+        .base-block .input-group {
+            margin-left: 22pt;
+        }
+
+
+        .base-block label {
+
+            font-size: 10.5pt;
+            vertical-align: middle;
+            padding: 1mm 0;
+        }
+
+        .base-block input {
+            margin-left: 5pt;
+            width: 54%;
+            padding: 1mm;
+            border: 1px solid #ccc;
+            font-size: 10.5pt;
+            background: white;
+            vertical-align: middle;
+            border-radius: 5pt;
+        }
+
+        .exam-block {
+            display: grid;
+            grid-template-columns: repeat(3, 33%);
+            grid-auto-flow: row dense;
+        }
+        .exam-block .input-group {
+            margin-left: 10pt;
+        }
+
+        .exam-block input,
+        .exam-block select {
+            margin-left: 5pt;
+            width: 60%;
+            padding: 1mm;
+            border: 1px solid #ccc;
+            font-size: 10.5pt;
+            background: white;
+            vertical-align: middle;
+            border-radius: 5pt;
+        }
+
+        .exam-block .item1 {
+            grid-column-start: 1;
+            grid-column-end: 2;
+        }
+
+        .exam-block .item2 {
+            grid-column-start: 1;
+            grid-column-end: 2;
+        }
+
+        .exam-block .item3 {
+            grid-column-start: 2;
+            grid-column-end: 3;
+            grid-row-start: 2;
+            grid-row-end: 4;
+            justify-self: start;
+            display: grid;
+            grid-template-rows: 10pt;
+            grid-template-columns: repeat(5, 40%);
+        }
+
+        .exam-block .item4 {
+            grid-column-start: 1;
+            grid-column-end: 6;
+            grid-row-start: 1;
+            grid-row-end: 2;
+
+        }
+
+        .guess-block {
+            display: flex;
+        }
+
+        .guess-block .left {
+            display: grid;
+            width: 50%;
+            margin-left: 40pt;
+            margin-top: 20pt;
+
+        }
+
+         .study-block {
+           display: grid;
+           grid-template-columns: repeat(2,50%);
+         }
+         .study-block input {
+            margin-left: 10pt;
+            border-radius: 5pt;
+            width: 50%;
+         }
+    
+        .study-block .item3 {
+            grid-column-start: 1;
+            grid-column-end: 3;
+            grid-row-start: 2;
+            grid-row-end: 2;
+        }         
+ 
+        .study-block .item3 textarea{
+            width: 70%;
+            margin-left: 10pt;
+            border-radius: 5pt;
+        }
+
+        input, select, textarea {
+            padding: 1mm;
+            border: 1px solid #ccc;
+            font-size: 10.5pt;
+            background: white;
+            vertical-align: middle;
+        }
+
+
+        .ability-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 4mm;
+        }
+
+        .ability-ratings {
+            width: 45%;
+        }
+
+        .ability-chart {
+            width: 55%;
+            height: auto;
+            aspect-ratio: 1;
+        }
+
+        .star-rating {
+            display: inline-block;
+            margin-left: 10mm;
+        }
+
+        .star {
+            color: #ddd;
+            font-size: 12pt;
+            cursor: pointer;
+        }
+
+        .star.active {
+            color: #005a54;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+                margin: 15mm;
+            }
+
+            .base-block,
+            .exam-block,
+            .guess-block,
+            .study-block {
+                break-inside: avoid;
+                background: white;
+            }
+
+            input,
+            select,
+            textarea {
+                border-color: #999;
+            }
+        }
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<button onclick="exportToPDF()" style="position: fixed; top: 20px; right: 20px; z-index: 9999; padding: 8px 16px; font-size: 12pt;">一键导出</button>
+<div class="container">
+<h1>首次课学情诊断报告</h1>
+<!-- 基本信息 -->
+<h2>基本信息</h2>
+<div class="base-block">
+<div class="input-group">
+<label>学生姓名</label>
+<input required="" type="text"/>
+</div>
+<div class="input-group">
+<label>授课教师</label>
+<input required="" type="text"/>
+</div>
+<div class="input-group">
+<label>授课日期</label>
+<input required="" type="date"/>
+</div>
+<div class="input-group">
+<label>授课内容</label>
+<input placeholder="简明概括课程内容" type="text"/>
+</div>
+<div class="input-group">
+<label>重点难点</label>
+<input type="text"/>
+</div>
+<div class="input-group">
+<label>课后练习</label>
+<input type="text"/>
+</div>
+</div>
+<!-- 考试信息 -->
+<h2>考试信息</h2>
+<div class="exam-block">
+<div class="input-group">
+<label>体系</label>
+<select id="systemSelect" required=""><option value="">请选择</option></select>
+</div>
+<div class="input-group">
+<label>考试时长</label>
+<input id="durationInput" placeholder="分钟" type="text"/>
+</div>
+<div class="input-group">
+<label>考试总分</label>
+<input type="number"/>
+</div>
+<div class="input-group item1">
+<label>学科</label>
+<select id="subjectSelect" required=""><option value="">请选择</option></select>
+</div>
+<div class="input-group item2">
+<label>试卷</label>
+<select id="paperSelect" required=""><option value="">请选择</option></select>
+</div>
+<div class="input-group item3">
+<label class="item4">最新分数线标准</label>
+<input class="mini-input" placeholder="A*" type="text"/>
+<input class="mini-input" placeholder="A" type="text"/>
+<input class="mini-input" placeholder="B" type="text"/>
+<input class="mini-input" placeholder="C" type="text"/>
+<input class="mini-input" placeholder="D" type="text"/>
+</div>
+</div>
+<!-- 能力评估 -->
+<h2>能力评估</h2>
+<div class="guess-block">
+<div class="left">
+<div class="ability-item">
+<label>
+                        学科基础
+                    </label>
+<div class="star-rating" data-target="subject-base">
+<span class="star" data-value="1">
+                            ★
+                        </span>
+<span class="star" data-value="2">
+                            ★
+                        </span>
+<span class="star" data-value="3">
+                            ★
+                        </span>
+<span class="star" data-value="4">
+                            ★
+                        </span>
+<span class="star" data-value="5">
+                            ★
+                        </span>
+</div>
+</div>
+<div class="ability-item">
+<label>
+                        英文水平
+                    </label>
+<div class="star-rating" data-target="english">
+<span class="star" data-value="1">
+                            ★
+                        </span>
+<span class="star" data-value="2">
+                            ★
+                        </span>
+<span class="star" data-value="3">
+                            ★
+                        </span>
+<span class="star" data-value="4">
+                            ★
+                        </span>
+<span class="star" data-value="5">
+                            ★
+                        </span>
+</div>
+</div>
+<div class="ability-item">
+<label>
+                        计算准确
+                    </label>
+<div class="star-rating" data-target="calculation">
+<span class="star" data-value="1">
+                            ★
+                        </span>
+<span class="star" data-value="2">
+                            ★
+                        </span>
+<span class="star" data-value="3">
+                            ★
+                        </span>
+<span class="star" data-value="4">
+                            ★
+                        </span>
+<span class="star" data-value="5">
+                            ★
+                        </span>
+</div>
+</div>
+<div class="ability-item">
+<label>
+                        灵活运用
+                    </label>
+<div class="star-rating" data-target="flexibility">
+<span class="star" data-value="1">
+                            ★
+                        </span>
+<span class="star" data-value="2">
+                            ★
+                        </span>
+<span class="star" data-value="3">
+                            ★
+                        </span>
+<span class="star" data-value="4">
+                            ★
+                        </span>
+<span class="star" data-value="5">
+                            ★
+                        </span>
+</div>
+</div>
+<div class="ability-item">
+<label>
+                        逻辑思维
+                    </label>
+<div class="star-rating" data-target="logic">
+<span class="star" data-value="1">
+                            ★
+                        </span>
+<span class="star" data-value="2">
+                            ★
+                        </span>
+<span class="star" data-value="3">
+                            ★
+                        </span>
+<span class="star" data-value="4">
+                            ★
+                        </span>
+<span class="star" data-value="5">
+                            ★
+                        </span>
+</div>
+</div>
+<div class="ability-item">
+<label>
+                        书面表述
+                    </label>
+<div class="star-rating" data-target="writing">
+<span class="star" data-value="1">
+                            ★
+                        </span>
+<span class="star" data-value="2">
+                            ★
+                        </span>
+<span class="star" data-value="3">
+                            ★
+                        </span>
+<span class="star" data-value="4">
+                            ★
+                        </span>
+<span class="star" data-value="5">
+                            ★
+                        </span>
+</div>
+</div>
+</div>
+<div class="right">
+<canvas height="300" id="abilityChart" style="margin-top: 10px;" width="300">
+</canvas>
+</div>
+</div>
+<p>能力评估板块仅为授课教师针对首次课课堂表现给出的评价，可能存在主观性，仅作为后续课程和学习规划参考使用</p>
+</div>
+<!-- 学习建议 -->
+<h2>学习建议</h2>
+<div class="study-block">
+<div class="input-group item1">
+<label>课堂小测准确率</label>
+<input max="100" min="0" placeholder="输入百分比" type="number"/>
+</div>
+<div class="input-group item2">
+<label>薄弱知识点</label>
+<input type="text"/>
+</div>
+<div class="input-group item3">
+<label>学习及备考建议</label>
+<textarea rows="3"></textarea>
+</div>
+</div>
+<script>
+        // 星级评分功能
+        document.querySelectorAll('.star-rating').forEach(container => {
+            const stars = container.querySelectorAll('.star');
+
+            stars.forEach((star, index) => {
+                star.addEventListener('click', () => {
+                    stars.forEach(s => s.classList.remove('active'));
+                    for (let i = 0; i <= index; i++) {
+                        stars[i].classList.add('active');
+                    }
+                    updateHiddenInput(container, index + 1);
+                });
+            });
+
+            function updateHiddenInput(container, value) {
+                let input = container.querySelector('input[type="hidden"]');
+                if (!input) {
+                    input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = container.dataset.target;
+                    container.appendChild(input);
+                }
+                input.value = value;
+            }
+        });
+    </script>
+<script>
+        let radarChartInstance = null;
+
+        function getStarRatings() {
+            const areas = ["subject-base", "english", "calculation", "flexibility", "logic", "writing"];
+            return areas.map(id => {
+                const stars = document.querySelectorAll('[data-target="' + id + '"] .star.active');
+                return stars.length;
+            });
+        }
+
+        function drawRadarChart() {
+            const ctx = document.getElementById('abilityChart');
+            if (!ctx) return;
+
+            const ratings = getStarRatings();
+
+            if (radarChartInstance) {
+                radarChartInstance.data.datasets[0].data = ratings;
+                radarChartInstance.update();
+            } else {
+                radarChartInstance = new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['学科基础', '英文水平', '计算准确', '灵活运用', '逻辑思维', '书面表述'],
+                        datasets: [{
+                            label: '能力维度',
+                            data: ratings,
+                            fill: true,
+                            backgroundColor: 'rgba(0, 90, 84, 0.2)',
+                            borderColor: '#005a54',
+                            pointBackgroundColor: '#005a54',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: '#005a54'
+                        }]
+                    },
+                    options: {
+                        responsive: false,
+                        scales: {
+                            r: {
+                                suggestedMin: 0,
+                                suggestedMax: 5,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", drawRadarChart);
+        document.querySelectorAll('.star-rating .star').forEach(star => {
+            star.addEventListener('click', () => {
+                drawRadarChart();
+            });
+        });
+    </script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+let database = {};
+
+function clearAndDisable(select) {
+  select.innerHTML = '<option value="">请选择</option>';
+  select.disabled = true;
+}
+
+function populateSelect(select, options) {
+  select.innerHTML = '<option value="">请选择</option>';
+  options.forEach(opt => {
+    const option = document.createElement('option');
+    option.value = option.text = opt;
+    select.appendChild(option);
+  });
+  select.disabled = false;
+}
+
+function setupDropdowns() {
+  const systemSelect = document.getElementById("systemSelect");
+  const subjectSelect = document.getElementById("subjectSelect");
+  const paperSelect = document.getElementById("paperSelect");
+
+  const durationInput = document.getElementById("durationInput");
+  const fullScoreInput = document.querySelectorAll(".exam-block input")[1];
+  const gradeInputs = document.querySelectorAll('.grade-input');
+
+  const systemList = Object.keys(database);
+  populateSelect(systemSelect, systemList);
+
+  systemSelect.addEventListener("change", () => {
+    const system = systemSelect.value;
+    clearAndDisable(subjectSelect);
+    clearAndDisable(paperSelect);
+    durationInput.value = "";
+    fullScoreInput.value = "";
+    gradeInputs.forEach(i => i.value = "");
+
+    if (system && database[system]) {
+      const subjectList = Object.keys(database[system]);
+      populateSelect(subjectSelect, subjectList);
+    }
+  });
+
+  subjectSelect.addEventListener("change", () => {
+    const system = systemSelect.value;
+    const subject = subjectSelect.value;
+    clearAndDisable(paperSelect);
+    durationInput.value = "";
+    fullScoreInput.value = "";
+    gradeInputs.forEach(i => i.value = "");
+
+    if (system && subject && database[system]?.[subject]) {
+      const paperList = Object.keys(database[system][subject]);
+      populateSelect(paperSelect, paperList);
+    }
+  });
+
+  paperSelect.addEventListener("change", () => {
+    const system = systemSelect.value;
+    const subject = subjectSelect.value;
+    const paper = paperSelect.value;
+    durationInput.value = "";
+    fullScoreInput.value = "";
+    gradeInputs.forEach(i => i.value = "");
+
+    const paperData = database?.[system]?.[subject]?.[paper];
+    if (paperData) {
+      durationInput.value = paperData.duration || "";
+      fullScoreInput.value = paperData.fullmark || "";
+
+      let grades = paperData.cutoffs || {};
+      let isAP = system.includes("AP");
+      let labels = isAP ? ["[5]", "[4]", "[3]", "[2]", "[1]"] : ["[A*]", "[A]", "[B]", "[C]", "[D]"];
+      let keys = isAP ? ["5", "4", "3", "2", "1"] : ["A*", "A", "B", "C", "D"];
+
+      keys.forEach((k, i) => {
+        if (gradeInputs[i]) {
+          gradeInputs[i].value = labels[i] + " " + (grades[k] || "-");
+        }
+      });
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  fetch("score_cutoffs.json")
+    .then(res => res.json())
+    .then(json => {
+      database = json;
+      setupDropdowns();
+    })
+    .catch(err => {
+      console.error("❌ 无法加载数据库 JSON 文件：", err);
+    });
+});
+</script>
+<script>
+let database = {};
+
+function clearAndDisable(select) {
+  select.innerHTML = '<option value="">请选择</option>';
+  select.disabled = true;
+}
+
+function populateSelect(select, options) {
+  select.innerHTML = '<option value="">请选择</option>';
+  options.forEach(opt => {
+    const option = document.createElement('option');
+    option.value = option.text = opt;
+    select.appendChild(option);
+  });
+  select.disabled = false;
+}
+
+function setupDropdowns() {
+  const systemSelect = document.getElementById("systemSelect");
+  const subjectSelect = document.getElementById("subjectSelect");
+  const paperSelect = document.getElementById("paperSelect");
+
+  const durationInput = document.getElementById("durationInput");
+  const fullScoreInput = document.querySelectorAll(".exam-block input")[1];
+  const gradeInputs = document.querySelectorAll('.grade-input');
+
+  const systemList = Object.keys(database);
+  populateSelect(systemSelect, systemList);
+
+  systemSelect.addEventListener("change", () => {
+    const system = systemSelect.value;
+    clearAndDisable(subjectSelect);
+    clearAndDisable(paperSelect);
+    durationInput.value = "";
+    fullScoreInput.value = "";
+    gradeInputs.forEach(i => i.value = "");
+
+    if (system && database[system]) {
+      const subjectList = Object.keys(database[system]);
+      populateSelect(subjectSelect, subjectList);
+    }
+  });
+
+  subjectSelect.addEventListener("change", () => {
+    const system = systemSelect.value;
+    const subject = subjectSelect.value;
+    clearAndDisable(paperSelect);
+    durationInput.value = "";
+    fullScoreInput.value = "";
+    gradeInputs.forEach(i => i.value = "");
+
+    if (system && subject && database[system]?.[subject]) {
+      const paperList = Object.keys(database[system][subject]);
+      populateSelect(paperSelect, paperList);
+    }
+  });
+
+  paperSelect.addEventListener("change", () => {
+    const system = systemSelect.value;
+    const subject = subjectSelect.value;
+    const paper = paperSelect.value;
+    durationInput.value = "";
+    fullScoreInput.value = "";
+    gradeInputs.forEach(i => i.value = "");
+
+    const paperData = database?.[system]?.[subject]?.[paper];
+    if (paperData) {
+      durationInput.value = paperData.duration || "";
+      fullScoreInput.value = paperData.fullmark || "";
+
+      let grades = paperData.cutoffs || {};
+      let isAP = system.includes("AP");
+      let labels = isAP ? ["[5]", "[4]", "[3]", "[2]", "[1]"] : ["[A*]", "[A]", "[B]", "[C]", "[D]"];
+      let keys = isAP ? ["5", "4", "3", "2", "1"] : ["A*", "A", "B", "C", "D"];
+
+      keys.forEach((k, i) => {
+        if (gradeInputs[i]) {
+          gradeInputs[i].value = labels[i] + " " + (grades[k] || "-");
+        }
+      });
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  fetch("score_cutoffs.json")
+    .then(res => res.json())
+    .then(json => {
+      database = json;
+      setupDropdowns();
+    })
+    .catch(err => {
+      console.error("❌ 无法加载数据库 JSON 文件：", err);
+    });
+});
+</script></body>
+</html>
