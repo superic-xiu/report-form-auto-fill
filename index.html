@@ -762,3 +762,12 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script></body>
 </html>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof populateSystemOptions === 'function') {
+    populateSystemOptions();
+  } else {
+    console.error('populateSystemOptions not found.');
+  }
+});
+</script>
